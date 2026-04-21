@@ -1,1 +1,16 @@
-
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "vercel/api/hook.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" }
+  ],
+  "env": {
+    "CRYPTO_KEY": "@crypto-key",
+    "ENC_KEY": "@enc-key"
+  }
+}
