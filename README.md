@@ -1,6 +1,7 @@
 # learningfishing
 this is 100% about fishes, i love eating fish
 
+```bash
 ├── .github/
 │
 │   ├── workflows/
@@ -44,3 +45,4 @@ this is 100% about fishes, i love eating fish
 ├── requirements.txt           # Python dependencies (Flask, pycryptodome)
 │
 └── vercel.json                # Vercel project manifest
+```
