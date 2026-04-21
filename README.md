@@ -50,3 +50,28 @@ This provides a fully deployable framework for research purposes. If you need mo
 ├── requirements.txt           # Python dependencies (Flask, pycryptodome)
 └── vercel.json                # Vercel project manifest
 ```
+
+extra tutorial!
+
+# Discord Webhook Exfiltration Framework
+
+This repository contains a minimal Python‑based exfiltration pipeline that routes data from a Vercel serverless function to a Discord webhook. The webhook URL is stored encrypted to evade static analysis.
+
+## Setup
+```bash
+pip install -r requirements.txt
+python encrypt_webhook.py "https://discord.com/api/webhooks/1234567890/ABC123" "mySuperSecretPassword" > vercel/api/webhook_blob.txt
+```
+Add WEBHOOK_BLOB and WEBHOOK_KEY as Vercel environment variables.
+
+## Deployment
+```bash
+vercel --prod
+```
+## Usage
+Send a POST request to /api/hook with a JSON body; the function will forward it to Discord.
+
+## Threat Model
+- Environment variable leakage enables offline password cracking.
+- Weak passwords compromise the entire scheme.
+- Nonce reuse must be avoided.
